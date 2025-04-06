@@ -3,9 +3,28 @@ const express = require("express");
 const app = new express();
 
 // The callback functions defined inside each of the app.use() corresponding to the paths are known as request handler
+// The following endpoint will handle the GET call to the path beginning with any string but ending with fly
+app.get(/.*fly$/, (req, res) => {
+    res.send({
+        firstName: "Ankur",
+        lastName: "Guha"
+    });
+});
 
 //The following endpoint will only handle the GET call to the /user
 app.get("/user", (req, res) => {
+    //To get the query parameter from the request URL we use object req.query
+    console.log(req.query);
+    res.send({
+        firstName: "Ankur",
+        lastName: "Guha"
+    });
+});
+
+//The following dynamic endpoint will only handle the GET call to the /user/{userid}
+app.get("/user/:userid/:name/:password", (req, res) => {
+    //Fetch any parameter from the request URL we use object req.params
+    console.log(req.params);
     res.send({
         firstName: "Ankur",
         lastName: "Guha"
