@@ -14,7 +14,7 @@ app.use("/getUserData", (req, res) => {
     res.send("User details sent successfully");
 })
 
-//wild card error handling - shold always be written at the end
+//wild card ("/") error handling - should always be written at the end
 app.use("/", (err, req, res, next) => {
     if(err)
     {
