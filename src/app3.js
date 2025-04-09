@@ -1,27 +1,25 @@
 const express = require("express");
-const {adminAuth, userAuth} = require("./middleware/auth");
 
 const app = express();
 
-//Handle auth middleware to check if the user is authorized or not
-app.use("/admin", adminAuth)
+//Express.js server on receving a request checks all the app.xxx("matching route") functions
 
-app.get("/user/login", (req, res) => {
-    res.send("User logged in successfully");
+app.use("/", (req, res, next) => {
+    //res.send("Handling / route")
+    next();
+})
+
+app.get("/user", (req, res, next) => {
+    console.log("1st route handler");
+    //res.send("Response 1");
+    next();
 });
 
-app.get("/user", userAuth, (req, res) => {
-    res.send("User detail sent");
+app.get("/user", (req, res) => {
+    console.log("2nd route handler");
+    res.send("2nd response");
 });
 
-app.use("/admin/getAllData", (req, res, next) => {
-    res.send("All data sent");
-})
-
-app.use("/admin/deleteUser", (req, res, next) => {
-    res.send("User deleted");
-})
-
-app.listen(6666, () => {
-    console.log("Server is listening on port number 6666...");
-})
+app.listen(7777, () => {
+    console.log("Server is up and running on port 7777...");
+});

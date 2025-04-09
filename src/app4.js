@@ -1,27 +1,27 @@
 const express = require("express");
+const {adminAuth, userAuth} = require("./middleware/auth");
 
 const app = express();
 
-app.use("/", (err, req, res, next) => {
-    if(err)
-    {
-        res.status(500).send("Some error occoured");
-    }
+//Handle auth middleware to check if the user is authorized or not
+app.use("/admin", adminAuth)
+
+app.get("/user/login", (req, res) => {
+    res.send("User logged in successfully");
+});
+
+app.get("/user", userAuth, (req, res) => {
+    res.send("User detail sent");
+});
+
+app.use("/admin/getAllData", (req, res, next) => {
+    res.send("All data sent");
 })
 
-app.use("/getUserData", (req, res) => {
-    throw new Error("hgfhjghj");
-    res.send("User details sent successfully");
+app.use("/admin/deleteUser", (req, res, next) => {
+    res.send("User deleted");
 })
 
-//wild card ("/") error handling - should always be written at the end
-app.use("/", (err, req, res, next) => {
-    if(err)
-    {
-        res.status(500).send("Something went wrong");
-    }
-})
-
-app.listen(6000, () => {
-    console.log("Server listening on 6000...");
+app.listen(6666, () => {
+    console.log("Server is listening on port number 6666...");
 })
