@@ -8,8 +8,17 @@ app.use(express.json());
 //Signup API - POST /signup - registers a new user into the database
 app.post("/signup", async (req, res, next) => {
     try{
+        const data = req.body;
+        if(data.skills?.length > 10)
+        {
+            throw new Error("Skill cannot be greater than 10");
+        }
+        if((data.age) && data.age > 100)
+        {
+            throw new Error("Age cannot be greater than 100");
+        }
         //Creating a new instance of the User model
-        const user = new User(req.body);
+        const user = new User(data);
         await user.save();
         res.status(200).send("User added successfully");
     }catch(err) {
@@ -27,7 +36,7 @@ app.get("/feed", async (req, res) => {
         }
         else
         {
-            res.status(404).send("No user found");
+            throw new Error("User not found");
         }
     } catch (error) 
     {
@@ -41,14 +50,11 @@ app.get("/profile", async (req, res) => {
         let userEmailID = req.body.emailID;
         // If there are multiple records with same emailID, the oldest document is returned
         const user = await User.findOne({emailID: userEmailID});
-        console.log(user);
-        if(user !== null)
+        if(user === null)
         {
-            res.status(200).send(user);
-        }else
-        {
-            res.status(404).send("User not found");
+            throw new Error("User not found");
         }
+        res.status(200).send(user);
     } catch (error) {
         res.status(401).send(error.message);
     }
@@ -66,12 +72,29 @@ app.delete("/profile", async (req, res) => {
 })
 
 //Update a specific user with emailID
-app.patch("/profile", async (req, res) => {
+app.patch("/profile/:emailID", async (req, res) => {
     try {
-        const useremailID = req.body.emailID;
+        const allowedUpdates = ["firstName", "lastName", "age", "skills", "about", "photoURL"];
+        const useremailID = req.params.emailID;
         const data = req.body;
-        const updatedUser = await User.findOneAndUpdate({emailID: useremailID}, data, {returnDocument: 'after'});
-        console.log(updatedUser);
+        const keys = Object.keys(data);
+        const isValidKeys = keys.every((k) => allowedUpdates.includes(k));
+        if(!isValidKeys)
+        {
+            throw new Error("User cannot be updated.");
+        }
+        if(data.skills?.length > 10)
+        {
+            throw new Error("Skill cannot be greater than 10");
+        }
+        if((data.age) && data?.age > 100)
+        {
+            throw new Error("Age cannot be greater than 100");
+        }
+        const updatedUser = await User.findOneAndUpdate({emailID: useremailID}, data, {returnDocument: 'after', runValidators: true});
+        if( updatedUser === null){
+            throw new Error("User not found");
+        }
         res.status(200).send("User updated successfully.")
     } catch (error) {
         res.status(401).send(error.message);
