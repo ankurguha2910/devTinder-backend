@@ -1,6 +1,8 @@
 const express = require("express");
 const { connectDB } = require("./config/database");
 const { User } = require("./models/user");
+const { validateData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 const app = express();
 
 app.use(express.json());
@@ -8,22 +10,40 @@ app.use(express.json());
 //Signup API - POST /signup - registers a new user into the database
 app.post("/signup", async (req, res, next) => {
     try{
-        const data = req.body;
-        if(data.skills?.length > 10)
-        {
-            throw new Error("Skill cannot be greater than 10");
-        }
-        if((data.age) && data.age > 100)
-        {
-            throw new Error("Age cannot be greater than 100");
-        }
+        validateData(req);
+        const { firstName, lastName, emailID, password } = req.body;
+        let hashPassword = await bcrypt.hash(password, 10);
         //Creating a new instance of the User model
-        const user = new User(data);
+        const user = new User({
+            firstName,
+            lastName,
+            emailID,
+            password: hashPassword
+        });
         await user.save();
         res.status(200).send("User added successfully");
     }catch(err) {
-        res.status(400).send(err.message)
+        res.status(400).send("ERROR : " + err.message)
     }  
+})
+
+app.post("/login", async (req, res) => {
+    try {
+        const { emailID, password } = req.body;
+        const user = await User.findOne({emailID: emailID});
+        if(!user)
+        {
+            throw new Error("Invalid credentials");
+        }
+        const verifyPassword = await bcrypt.compare(password, user.password);
+        if(!verifyPassword)
+        {
+            throw new Error("Invalid credentials");
+        }
+        res.send("Login successfull!!!");
+    } catch (error) {
+        res.status(400).send("ERROR : " + error.message)
+    }
 })
 
 //Feed API GET - /feed - get all the registered users from the database
@@ -87,7 +107,7 @@ app.patch("/profile/:emailID", async (req, res) => {
         {
             throw new Error("Skill cannot be greater than 10");
         }
-        if((data.age) && data?.age > 100)
+        if(data.age || data?.age > 100)
         {
             throw new Error("Age cannot be greater than 100");
         }
@@ -97,7 +117,7 @@ app.patch("/profile/:emailID", async (req, res) => {
         }
         res.status(200).send("User updated successfully.")
     } catch (error) {
-        res.status(401).send(error.message);
+        res.status(401).send("ERROR : " + error.message);
     }
 })
 
