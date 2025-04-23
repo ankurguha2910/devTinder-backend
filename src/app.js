@@ -3,9 +3,13 @@ const { connectDB } = require("./config/database");
 const { User } = require("./models/user");
 const { validateData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require('cookie-parser');
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middleware/auth");
 const app = express();
 
-app.use(express.json());
+app.use(express.json()); //middleware to parse the req.body data in JSON format
+app.use(cookieParser()); //middleware to parse the token sent from client side to server side inside a cookie
 
 //Signup API - POST /signup - registers a new user into the database
 app.post("/signup", async (req, res, next) => {
@@ -35,11 +39,16 @@ app.post("/login", async (req, res) => {
         {
             throw new Error("Invalid credentials");
         }
-        const verifyPassword = await bcrypt.compare(password, user.password);
+        const verifyPassword = await user.validatePassword(password);
         if(!verifyPassword)
         {
             throw new Error("Invalid credentials");
         }
+        // creating a dummy token
+        // res.cookie('token','fhjbjvhjvvjhv!@#ythg54515445ghdghfgjhfjhvhjv516546546./dydy');
+        //creating a JsonWebToken (jwt)
+        const token = await user.getJWT();
+        res.cookie("token", token, {expires: new Date(Date.now() + 7 * 3600000)});
         res.send("Login successfull!!!");
     } catch (error) {
         res.status(400).send("ERROR : " + error.message)
@@ -79,6 +88,15 @@ app.get("/profile", async (req, res) => {
         res.status(401).send(error.message);
     }
 })
+
+app.get("/get-profile", userAuth, async (req, res) => {
+    try {
+        const user = req.user;
+        res.send(user);
+    } catch (error) {
+        res.status(401).send("ERROR : " + error.message)
+    }
+});
 
 //Delete a specific user with userID
 app.delete("/profile", async (req, res) => {
@@ -121,6 +139,9 @@ app.patch("/profile/:emailID", async (req, res) => {
     }
 })
 
+app.post("/send-connection-request", userAuth, async (req, res) => {
+    res.send("Connection request sent");
+});
 connectDB()
 .then(() => {
     console.log("Databse connection established successfully.");
