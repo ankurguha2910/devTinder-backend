@@ -72,6 +72,7 @@ const userSchema = new mongoose.Schema({
     }
 },{timestamps: true});
 
+userSchema.index({firstName: 1, lastName: 1});
 //schema method to genrate JWT
 userSchema.methods.getJWT = async function () {
     const user = this;
@@ -87,6 +88,6 @@ userSchema.methods.validatePassword = async function(passwordInputByUser){
     return isPasswordValid;
 }
 
-const User = mongoose.model("User", userSchema);
+const User = new mongoose.model("User", userSchema);
 
 module.exports = { User }
